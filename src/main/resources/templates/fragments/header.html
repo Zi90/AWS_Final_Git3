@@ -92,14 +92,44 @@
             </ul>
         </div>
 
-
-
         <nav class="d-flex justify-content-between align-items-center gap-4">
             <div><a href="">이벤트</a></div>
             <div><a href="">사기조회</a></div>
             <div><a href="/board/price">시세조회</a></div>
             <div><a href="/wish/list">찜한상품</a></div>
             <div><a href="">고객센터</a></div>
+            <div class="weather-container d-flex align-items-center gap-3 ms-auto">
+                <div th:unless="${weather == null}" sec:authorize="isAuthenticated()" th:text="${location.parsedAddress}" class="address-bold"></div>
+                <form id="addressForm" th:action="@{/}" method="get" style="display: none;">
+                    <input id="addressInput" name="address" type="text" />
+                </form>
+                <img th:unless="${weather == null}" sec:authorize="isAuthenticated()" th:src="'https://openweathermap.org/img/wn/' + ${weather['weather_icon']} + '@2x.png'" alt="Weather Icon" class="weather-icon"/>
+                <div th:unless="${weather == null}" sec:authorize="isAuthenticated()" th:text="${weather['temperature']} + '℃'" class="weather-tmp"></div>
+            </div>
         </nav>
+
+        <script th:inline="javascript">
+            var parsedAddress = [[${location != null ? location.parsedAddress : ''}]];
+        </script>
+
+<!--        <script th:inline="javascript">
+            document.addEventListener("DOMContentLoaded", function () {
+               // sessionStorage에서 주소 값을 가져옵니다.
+               var parsedAddress = sessionStorage.getItem('userParsedAddress');
+               var parsedAddressElement = document.getElementById("parsedAddress");
+
+               // 만약 값이 존재하면, 해당 값을 HTML에 출력하거나 사용할 수 있습니다.
+               if (parsedAddressElement) {
+                   if (userParsedAddress) {
+                       document.getElementById("parsedAddress").innerText = userParsedAddress;
+                   } else {
+                       document.getElementById("parsedAddress").innerText = "주소 정보 없음";
+                   }
+               }
+
+            });
+        </script>-->
+
+        <script th:src="@{/js/weather.js}"></script>
     </div>
 </div>
