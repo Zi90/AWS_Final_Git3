@@ -44,20 +44,33 @@
                     </a>
                 </li>
                 <li>
-                    <a href="" class="d-flex justify-content-center align-items-center gap-1">
+                    <a href="/user/myInfo" class="d-flex justify-content-center align-items-center gap-1">
                         <img src="/img/my.svg">
                         <span>마이</span>
                     </a>
                 </li>
-                <li>
-                    <a href="" class="d-flex justify-content-center align-items-center gap-1">
+                <li sec:authorize="isAuthenticated()">
+                    <a th:href="@{/chat/chatRoomList(userNum=${#authentication.getPrincipal().userVO.userNum})}"
+                       class="d-flex justify-content-center align-items-center gap-1">
                         <img src="/img/chatting.svg">
                         <span>채팅</span>
                     </a>
                 </li>
+                <!-- 알림 아이콘 -->
+                <li id="notification-icon" class="d-flex justify-content-center align-items-center gap-1">
+                    <img src="/img/notification.png" alt="알림 아이콘">
+                    <span id="notification-badge" class="badge bg-danger" style="display: none;">0</span>
+                    <span>알림</span>
+                </li>
             </ul>
         </div>
     </div>
+
+    <!-- 알림 리스트 (드롭다운처럼 표시) -->
+    <div id="notification-list" style="display: none; position: absolute; background-color: #fff; border: 1px solid #ccc; width: 250px; max-height: 300px; overflow-y: auto; z-index: 9999;">
+        <!-- 알림 항목들이 여기에 동적으로 추가됩니다 -->
+    </div>
+
     <div class="d-flex justify-content-start align-items-center" id="headerBot">
         <a href="">
             <div id="category" class="d-flex justify-content-between align-items-center gap-2">
@@ -69,7 +82,10 @@
         </a>
 
         <div class="dropdown">
-            <button class="btn btn-secondary dropdown-toggle" type="button" id="categoryDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+            <button class="btn btn-secondary" type="button" id="categoryDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 20 20" class="text-xl" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"></path>
+                </svg>
                 카테고리
             </button>
 
@@ -93,18 +109,19 @@
         </div>
 
         <nav class="d-flex justify-content-between align-items-center gap-4">
-            <div><a href="">이벤트</a></div>
-            <div><a href="">사기조회</a></div>
+            <div><a href="/event/list">이벤트</a></div>
+            <div><a href="/board/fraud">사기조회</a></div>
             <div><a href="/board/price">시세조회</a></div>
             <div><a href="/wish/list">찜한상품</a></div>
             <div><a href="">고객센터</a></div>
+            <div><a href="/user/admin" sec:authorize="hasRole('ROLE_ADMIN')">관리자</a></div>
             <div class="weather-container d-flex align-items-center gap-3 ms-auto">
                 <!-- 비로그인 시 현재 위치 띄우기 -->
                 <div sec:authorize="isAnonymous()" class="address-bold" id="currentAddress"></div>
                 <!-- 로그인 시 주소 위치 띄우기 -->
                 <div sec:authorize="isAuthenticated()" class="address-bold" id="parsedAddress"></div>
 
-                <form id="addressForm" th:action="@{/}" method="get" style="display: none;">
+                <form id="addressForm" th:action="@{/}" method="get" class="address-input">
                     <input id="addressInput" name="address" type="text"/>
                 </form>
 
@@ -178,4 +195,5 @@
         </div>
 
     </div>
+
 </div>
