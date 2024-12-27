@@ -5,7 +5,7 @@
       layout:decorate="~{layout/layout}">
 
 <head>
-    <link rel="stylesheet" th:href="@{/css/price-search.css}">
+    <link rel="stylesheet" th:href="@{/css/price.css}">
 </head>
 
 
@@ -16,21 +16,25 @@
             <div class="price-title">시세 조회</div>
             <div class="price-subTitle">원하시는 상품이 얼마에 거래되고 있는지 알아보세요</div>
             <!--class="d-flex"-->
-            <form action="/board/price" role="search">
+            <form action="/board/price" role="search" id="priceSearchForm">
                 <div class="price-searchBar">
                     <!--class="form-control me-2"-->
-<!--                    <img src="/img/search.svg" alt="Search Icon" class="price-searchIcon">-->
+                    <!--<img src="/img/search.svg" alt="Search Icon" class="price-searchIcon">-->
                     <!--aria-label="Search"-->
                     <input name="keyword" type="search" placeholder="어떤 시세 정보가 궁금하세요?" class="price-searchBox" th:value="${keyword != null ? keyword : ''}">
                 </div>
             </form>
         </div>
 
-        <div class="product-title">최근 등록된 상품</div>
+        <div class="price-hiddenBox">
+            <div class="product-title">최근 등록된 상품</div>
 
-        <hr>
+            <hr>
 
-        <div class="product-subTitle">최근 등록된 상품의 가격을 비교해봤어요</div>
+            <div class="product-subTitle">최근 등록된 상품의 가격을 비교해봤어요</div>
+        </div>
+
+        <div class="product-subTitle default">상품의 이름을 입력해 주세요</div>
 
         <!-- 시세 정보 표시 부분 -->
         <div class="product-priceContainer">
@@ -45,7 +49,7 @@
         <div class="product-list">
             <!-- 최근 등록된 상품 20개 순회 -->
             <div th:each="product : ${recentProducts}" class="product-item">
-
+                <a th:href="@{/board/detail(boardId=${product.boardVO.boardId})}">
                 <!-- 상품 이미지 -->
                 <div class="product-image">
                     <img th:if="${product.fileVOList != null and !product.fileVOList.isEmpty()}"
@@ -56,15 +60,15 @@
                 <div th:text="${product.boardVO.boardName}" class="item-title"></div>
 
                 <!-- 상품 가격 -->
-                <div th:text="'가격: ' + ${product.boardVO.tradePrice} + '원'" class="item-price"></div>
+                <div th:text="${product.boardVO.tradePrice} + '원'" class="item-price"></div>
 
                 <!-- 상품 등록일 -->
                 <div th:text="'등록일: ' + ${product.boardVO.regAt}" class="item-atc"></div>
-
+                </a>
             </div>
         </div>
     </div>
 
-    <hr style="visibility: hidden; margin-bottom: 120px;">
-
+    <hr style="visibility: hidden; margin-bottom: 160px;">
+    <script th:src="@{/js/price.js}"></script>
 </div>
