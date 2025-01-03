@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.project.joonggo.repository.PaymentMapper">
+
+    <!-- 결제 정보 저장 -->
+    <insert id="insertPayment">
+        INSERT INTO payment (imp_uid,merchant_uid, board_id, amount, product_name, payment_status, paid_at, user_num)
+        VALUES ( #{impUid},#{merchantUid}, #{boardId}, #{amount}, #{productName}, #{paymentStatus}, NOW(), #{userNum});
+    </insert>
+
+    <update id="updatePaymentStatus">
+        UPDATE payment
+        SET cancel_flag = 1, refunded_amount = #{paidAmount}
+        WHERE imp_uid = #{impUid}
+    </update>
+
+    <select id="getPaymentHistory" resultType="com.project.joonggo.domain.Payment">
+        SELECT *
+        FROM payment
+        WHERE user_num = #{userNum}
+        ORDER BY paid_at DESC
+    </select>
+</mapper>

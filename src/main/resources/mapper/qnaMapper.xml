@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.project.joonggo.repository.QnaMapper">
+
+    <insert id="register">
+        insert into qna_board(qna_name,category,qna_content,user_id)
+        values(#{qnaName},#{category},#{qnaContent},#{userId});
+    </insert>
+
+    <select id="getQnaId" resultType="long">
+        select max(qna_id) from qna_board;
+    </select>
+
+    <select id="getDetail" resultType="com.project.joonggo.domain.QnaVO">
+        select * from qna_board where qna_id = ${qnaId}
+    </select>
+
+    <select id="getUpdateContent" resultType="String">
+        SELECT qna_content
+        FROM qna_board
+        WHERE qna_id = #{qnaId}
+    </select>
+
+    <update id="updateQnaContent">
+        UPDATE qna_board
+        SET
+        qna_name = #{qnaName},
+        category = #{category},
+        qna_content = #{qnaContent}
+        WHERE qna_id = #{qnaId}
+    </update>
+
+    <update id="qnaIsDelUpdate">
+        update qna_board
+        set
+        is_del = 'Y'
+        where qna_id = #{qnaId}
+    </update>
+
+    <select id="getUserId" resultType="Long">
+        select user_id from qna_board where qna_id = #{qnaId}
+    </select>
+
+    <select id="getMaxQnaId" resultType="Long">
+        select MAX(qna_id) from qna_board
+    </select>
+
+    <select id="getMyList" resultType="com.project.joonggo.domain.QnaVO">
+        select * from qna_board
+        WHERE is_del = 'N' AND user_id = #{userNum}
+        order by qna_id desc
+    </select>
+
+    <update id="updateAnswerCount">
+        update qna_board set answer_count = answer_count + 1
+        where qna_id = #{qnaId}
+    </update>
+
+    <select id="getTotal" resultType="int">
+        select count(qna_id) from qna_board
+        where is_del = 'N'
+    </select>
+
+    <select id="getList" resultType="com.project.joonggo.domain.QnaVO">
+        select * from qna_board  WHERE is_del = 'N' order by qna_id desc
+        limit #{startIndex}, #{qty}
+    </select>
+
+    <select id="getListPending" resultType="com.project.joonggo.domain.QnaVO">
+        SELECT * FROM qna_board WHERE answer_count = 0 and is_del='N'
+        order by qna_id desc limit #{startIndex}, #{qty};
+    </select>
+
+    <select id="countPending" resultType="int">
+        SELECT COUNT(*) FROM qna_board WHERE answer_count = 0;
+    </select>
+
+</mapper>

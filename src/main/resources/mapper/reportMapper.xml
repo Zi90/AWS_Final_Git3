@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.project.joonggo.repository.ReportMapper">
+    <select id="getReasonList" resultType="com.project.joonggo.domain.ReasonVO">
+        SELECT * FROM reasonlist
+    </select>
+    <insert id="insertReport" parameterType="com.project.joonggo.domain.ReportVO">
+        INSERT INTO reportlist (report_comp_id, user_num, board_id, reporter_num)
+        VALUES (#{reportCompId}, #{userNum}, #{boardId}, #{reporterNum})
+    </insert>
+
+    <select id="getFilteredListByCompId" resultType="com.project.joonggo.domain.ReportVO">
+        select * from reportlist
+        <where>
+            <if test="reportCompId != null">
+                AND report_comp_id = #{reportCompId}
+            </if>
+            <!-- 기타 필터링 조건이 있으면 여기에 추가 -->
+        </where>
+        order by report_num desc
+        limit #{pgvo.startIndex}, #{pgvo.qty}
+    </select>
+
+    <select id="getList" resultType="com.project.joonggo.domain.ReportVO">
+        select * from reportlist
+        order by report_num desc
+        limit #{startIndex}, #{qty}
+    </select>
+
+    <select id="getFilteredReportTotal" resultType="int">
+        select count(report_num) from reportlist
+        <where>
+            <if test="reportCompId != null">
+                AND report_comp_id = #{reportCompId}
+            </if>
+        </where>
+    </select>
+
+    <select id="getTotalCount" resultType="int">
+        select count(report_num) from reportlist
+    </select>
+
+    <update id="updateStatus">
+        UPDATE reportlist SET status = #{status} WHERE report_num = #{reportId}
+    </update>
+    <select id="getStatusByReportId" resultType="String">
+        SELECT status FROM reportlist WHERE report_num = #{reportId}
+    </select>
+    <select id="getUserNumByReportId" resultType="long">
+        SELECT user_num FROM reportlist WHERE report_num = #{reportId}
+    </select>
+    <select id="getCompContentByCompId" resultType="String">
+        SELECT comp_content
+        FROM reasonlist
+        WHERE comp_id = #{compId}
+    </select>
+
+
+</mapper>

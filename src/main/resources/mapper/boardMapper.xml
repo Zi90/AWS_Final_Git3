@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.project.joonggo.repository.BoardMapper">
+
+    <insert id="register">
+        insert into sellbuy_board(board_name,category,trade_price,board_content,seller_id)
+        values(#{boardName},#{category},#{tradePrice},#{boardContent},#{sellerId});
+    </insert>
+
+    <select id="getBoardId" resultType="long">
+        select max(board_id) from sellbuy_board;
+    </select>
+
+    <select id="getList" resultType="com.project.joonggo.domain.BoardFileDTO">
+        select * from sellbuy_board
+        WHERE is_del = 'N'
+        <include refid="search"/>
+        <include refid="categorySearch"/>
+        order by board_id desc
+        limit #{startIndex}, #{qty}
+    </select>
+
+    <select id="getDetail" resultType="com.project.joonggo.domain.BoardVO">
+        select * from sellbuy_board where board_id = #{boardId}
+    </select>
+    <update id="updateTradeFlag">
+        UPDATE sellbuy_board
+        SET trade_flag = 1
+        WHERE board_id = #{boardId}
+        AND trade_flag = 0  <!-- 거래 완료되지 않은 게시글만 업데이트 -->
+    </update>
+
+    <select id="getUpdateContent" resultType="String">
+        SELECT board_content
+        FROM sellbuy_board
+        WHERE board_id = #{boardId}
+    </select>
+
+    <update id="updateBoardContent" parameterType="com.project.joonggo.domain.BoardVO">
+        UPDATE sellbuy_board
+        SET
+        board_name = #{boardName},
+        category = #{category},
+        trade_price = #{tradePrice},
+        board_content = #{boardContent}
+        WHERE board_id = #{boardId}
+    </update>
+
+    <update id="boardIsDelUpdate">
+        UPDATE sellbuy_board
+        SET is_del = 'Y'
+        WHERE board_id = #{boardId}
+    </update>
+
+    <select id="getBoardList" resultType="com.project.joonggo.domain.BoardVO">
+        select * from sellbuy_board
+        WHERE is_del = 'N'
+        <if test="includeSoldOut == false">
+            AND trade_flag = 0 <!-- 판매완료된 상품은 제외 -->
+        </if>
+        <if test="includeSoldOut == true">
+            AND (trade_flag = 0 OR trade_flag = 1) <!-- 판매완료된 상품도 포함 -->
+        </if>
+        <include refid="search"/>
+        <include refid="categorySearch"/>
+        <include refid="priceSearch"/> <!-- 가격 조건 추가 -->
+
+        <!-- sort 파라미터에 따라 동적으로 ORDER BY 설정 -->
+        <choose>
+            <when test="sort == 'latest'">
+                order by board_id desc <!-- 최신순 -->
+            </when>
+            <when test="sort == 'readCount'">
+                order by read_count desc <!-- 조회순 (내림차순으로 정렬) -->
+            </when>
+            <when test="sort == 'recommend'">
+                order by like_count desc <!-- 추천순 (예시, 추천수가 많은 순으로 정렬) -->
+            </when>
+            <when test="sort == 'low-price'">
+                order by trade_price asc <!-- 낮은 가격순 (오름차순으로 정렬) -->
+            </when>
+            <when test="sort == 'high-price'">
+                order by trade_price desc <!-- 높은 가격순 (내림차순으로 정렬) -->
+            </when>
+            <otherwise>
+                order by board_id desc <!-- 기본적으로 최신순 (최신순을 기본값으로 설정) -->
+            </otherwise>
+        </choose>
+
+
+        LIMIT #{startIndex}, #{qty}
+    </select>
+
+    <update id="incrementReadCount">
+        update sellbuy_board
+        set read_count = read_count+1
+        where board_id = #{boardId}
+    </update>
+
+    <update id="incrementWishCount" parameterType="long">
+        UPDATE sellbuy_board
+        SET like_count = like_count + 1
+        WHERE board_id = #{boardId}
+    </update>
+
+    <update id="decrementWishCount" parameterType="long">
+        UPDATE sellbuy_board
+        SET like_count = like_count - 1
+        WHERE board_id = #{boardId}
+    </update>
+
+    <select id="getLikeCount" resultType="int">
+        select like_count from sellbuy_board
+        where board_id = ${boardId}
+    </select>
+
+    <select id="getTotal" resultType="int">
+        select count(board_id) from sellbuy_board
+        where is_del = 'N'
+        <if test="includeSoldOut == false">
+            AND trade_flag = 0 <!-- 판매완료된 상품은 제외 -->
+        </if>
+        <if test="includeSoldOut == true">
+            AND (trade_flag = 0 OR trade_flag = 1) <!-- 판매완료된 상품도 포함 -->
+        </if>
+        <include refid="search"/>
+        <include refid="categorySearch"/>
+        <include refid="priceSearch"/> <!-- 가격 조건 추가 -->
+    </select>
+
+    <sql id="search">
+        <if test="keyword != null and keyword != ''">
+            AND board_name LIKE CONCAT('%', #{keyword}, '%') <!-- 검색어가 포함된 게시글만 검색 -->
+        </if>
+    </sql>
+
+    <sql id="categorySearch">
+        <if test="category != null and category != ''">
+            AND category LIKE CONCAT('%', #{category}, '%') <!-- 카테고리가 일치하는 게시글만 검색 -->
+        </if>
+    </sql>
+
+    <sql id="priceSearch">
+        <if test="minPrice != null">
+            AND trade_price >= #{minPrice}
+        </if>
+        <if test="maxPrice != null">
+            <![CDATA[
+                AND trade_price <= #{maxPrice}
+                ]]>
+        </if>
+    </sql>
+
+    <select id="searchPrice" resultType="com.project.joonggo.domain.BoardVO">
+        SELECT * FROM sellbuy_board
+        WHERE board_name LIKE CONCAT('%', #{keyword}, '%')
+    </select>
+
+    <select id="getSellerIdByBoardId" resultType="long">
+        select seller_id from sellbuy_board where board_id = ${boardId}
+    </select>
+
+    <select id="getRecentProducts" resultType="com.project.joonggo.domain.BoardVO">
+        SELECT * FROM sellbuy_board
+        WHERE is_del = 'N'
+        AND board_content LIKE '%&lt;img%'
+        ORDER BY reg_at DESC
+        LIMIT 18;
+    </select>
+
+    <select id="getRecommendedProducts" resultType="com.project.joonggo.domain.BoardVO">
+        SELECT * FROM sellbuy_board
+        WHERE is_del = 'N'
+        AND board_content LIKE '%&lt;img%'
+        ORDER BY like_count DESC
+        LIMIT 18;
+    </select>
+
+    <select id="getPopularProducts" resultType="com.project.joonggo.domain.BoardVO">
+        SELECT *
+        FROM sellbuy_board
+        WHERE is_del = 'N'
+        AND board_content LIKE '%&lt;img%'
+        ORDER BY read_count DESC
+        LIMIT 18;
+    </select>
+
+    <select id="getMyTotal" resultType="int">
+        select count(board_id) from sellbuy_board
+        where is_del = 'N'
+        and seller_id = #{userNum}
+    </select>
+
+    <select id="getMyList" resultType="com.project.joonggo.domain.BoardFileDTO">
+        select * from sellbuy_board
+        WHERE is_del = 'N'
+        and seller_id = #{userNum}
+        order by board_id desc
+        limit #{pgvo.startIndex}, #{pgvo.qty}
+    </select>
+
+    <select id="getMyBoardList" resultType="com.project.joonggo.domain.BoardVO">
+        select * from sellbuy_board
+        WHERE is_del = 'N'
+        and seller_id = #{userNum}
+        order by board_id desc
+        limit #{pgvo.startIndex}, #{pgvo.qty}
+    </select>
+
+    <select id="getCategory" resultType="String">
+        select category from sellbuy_board where board_id = #{boardId}
+    </select>
+
+    <select id="getAvgPriceForLast15Days" resultType="java.util.Map">
+        SELECT
+        AVG(trade_price) AS avg_price,
+        DATE(reg_at) AS date
+        FROM
+        sellbuy_board
+        WHERE
+        reg_at >= CURDATE() - INTERVAL 15 DAY
+        AND is_del = 'N'
+        AND board_name LIKE CONCAT('%', #{keyword}, '%')
+        GROUP BY
+        DATE(reg_at)
+        ORDER BY
+        DATE(reg_at);
+    </select>
+
+    <select id="getProductsByCategory" resultType="com.project.joonggo.domain.BoardVO">
+        SELECT * FROM sellbuy_board WHERE category = #{category} AND board_id != #{boardId} LIMIT 10;
+    </select>
+
+</mapper>

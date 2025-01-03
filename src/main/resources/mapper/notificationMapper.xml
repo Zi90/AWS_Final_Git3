@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.project.joonggo.repository.NotificationMapper">
+
+    <insert id="insertNotification" parameterType="com.project.joonggo.domain.NotificationVO">
+        INSERT INTO notifications (user_id, message, status, created_at, move_id, type)
+        VALUES (#{userId}, #{message}, #{status}, NOW(), #{moveId}, #{type})
+    </insert>
+
+    <select id="getNotifications" resultType="com.project.joonggo.domain.NotificationVO">
+        SELECT * FROM notifications
+        WHERE user_id = #{userId} AND status = 'UNREAD'
+        ORDER BY created_at desc
+    </select>
+
+    <!-- 알림 ID로 알림 조회 -->
+    <select id="getNotificationById" resultType="com.project.joonggo.domain.NotificationVO">
+        SELECT *
+        FROM notifications
+        WHERE notification_id = #{notificationId}
+    </select>
+
+    <!-- 알림 상태 업데이트 -->
+    <update id="updateNotificationStatus">
+        UPDATE notifications
+        SET status = #{status}
+        WHERE notification_id = #{notificationId}
+    </update>
+
+    <select id="getNotificationId" resultType="Long">
+        select MAX(notification_id) from notifications
+    </select>
+
+    <select id="getNotificationCreateAt" resultType="java.time.LocalDateTime">
+        SELECT created_at
+        FROM notifications
+        ORDER BY created_at DESC
+        LIMIT 1
+    </select>
+
+    <select id="getCreateAt" resultType="java.time.LocalDateTime">
+        SELECT created_at
+        FROM notifications
+        WHERE notification_id = #{notificationId}
+    </select>
+
+</mapper>

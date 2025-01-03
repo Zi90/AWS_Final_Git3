@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.project.joonggo.repository.EventMapper">
+    <insert id="insertParticipation" parameterType="com.project.joonggo.domain.EventVO">
+        INSERT INTO event (user_num, type)
+        VALUES (#{userNum}, #{type});
+    </insert>
+    <insert id="insertGiftcon" parameterType="com.project.joonggo.domain.GiftconVO">
+        INSERT INTO giftcon (user_num, end_date, giftcon_name)
+        VALUES (
+        #{userNum}, DATE_ADD(NOW(), INTERVAL 7 DAY),
+        LPAD(FLOOR(RAND() * 1000000000000), 12, '0')
+        );
+    </insert>
+    <select id="checkTodayRoulette" resultType="int" parameterType="long">
+        SELECT COUNT(*)
+        FROM event
+        WHERE user_num = #{userNum}
+        and type = "roulette"
+        AND DATE(reg_at) = CURDATE();
+    </select>
+    <select id="checkTodayAttend" resultType="int" parameterType="long">
+        SELECT COUNT(*)
+        FROM event
+        WHERE user_num = #{userNum}
+        and type = "attend"
+        AND DATE(reg_at) = CURDATE();
+    </select>
+    <select id="getAttendCount" resultType="int" parameterType="long">
+        select count(*) from event
+        where user_num = #{userNum}
+        and type = "attend"
+    </select>
+    <select id="getMyGiftconTotal" resultType="int">
+        select count(giftcon_id) from giftcon
+        where user_num = #{userId}
+    </select>
+    <select id="getMyGiftconList" resultType="com.project.joonggo.domain.GiftconVO">
+        select * from giftcon
+        WHERE user_num = #{userId}
+        order by giftcon_id desc
+        limit #{pgvo.startIndex}, #{pgvo.qty}
+    </select>
+</mapper>

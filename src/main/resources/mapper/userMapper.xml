@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.project.joonggo.repository.UserMapper">
+    <insert id="insert" keyProperty="userNum">
+        insert into user(user_id, password, user_name, birth_year, birth_month, birth_day, address_1, address_2, address_3, post_code, signflag, social_id, phone)
+        values(#{userId}, #{password}, #{userName}, #{birthYear}, #{birthMonth}, #{birthDay}, #{address1}, #{address2}, #{address3}, #{postCode}, #{signflag}, #{socialId}, #{phone})
+    </insert>
+    <insert id="insertAuthInit">
+        insert into auth(user_num, auth)
+        values(#{userNum}, 'ROLE_USER')
+    </insert>
+    <select id="findUserByIdAndSignFlag" parameterType="map" resultType="com.project.joonggo.domain.UserVO">
+        select *
+        from user
+        where social_id = #{id} and signflag = #{signflag}
+        and is_del = 'N'
+    </select>
+    <select id="findUserByEmail" parameterType="map" resultType="com.project.joonggo.domain.UserVO">
+        select *
+        from user
+        where user_id = #{userId} and signflag = #{signFlagDefault}
+        and is_del = 'N'
+    </select>
+    <select id="getMaxUserNum" resultType="long">
+        SELECT MAX(user_num) FROM user;
+    </select>
+    <select id="selectUserNum" resultType="com.project.joonggo.domain.UserVO">
+        select * from user where user_num = #{userNum}
+    </select>
+    <select id="selectAuths" resultType="com.project.joonggo.domain.AuthVO">
+        select * from auth where user_num = #{userNum}
+    </select>
+    <select id="selectUserByEmailAndDefaultSignFlag" resultType="com.project.joonggo.domain.UserVO">
+        select *
+        from user
+        where user_id = #{username} and signflag = 0
+        and is_del = 'N'
+    </select>
+    <select id="getUsernumByUserId" resultType="Long">
+        SELECT user_num
+        FROM user
+        WHERE user_id = #{userId}
+    </select>
+    <select id="getList" resultType="com.project.joonggo.domain.UserVO">
+        select * from user
+    </select>
+    <select id="findByNameAndEmail" resultType="com.project.joonggo.domain.UserVO">
+        SELECT *
+        FROM user
+        WHERE user_name = #{name} AND phone = #{email} and signflag = 0;
+    </select>
+    <update id="upScore">
+        UPDATE user SET score = score + 1 WHERE user_num = #{userNum}
+    </update>
+    <update id="downScore">
+        UPDATE user SET score = score - 1 WHERE user_num = #{userNum}
+    </update>
+    <select id="getAdminId" resultType="Long">
+        select user_num from auth where auth = 'ROLE_ADMIN';
+    </select>
+    <update id="updatePassword">
+        update user set password = #{encodedPassword} where user_id = #{userId} and signflag = 0;
+    </update>
+    <update id="modify">
+        update user set
+        password = #{password},
+        user_name = #{userName},
+        birth_year = #{birthYear},
+        birth_month = #{birthMonth},
+        birth_day = #{birthDay},
+        address_1 = #{address1},
+        address_2 = #{address2},
+        address_3 = #{address3},
+        post_code = #{postCode},
+        phone = #{phone}
+        where user_num = #{userNum}
+    </update>
+    <update id="delete">
+        update user set
+        is_del = 'Y'
+        where user_num = #{userNum}
+    </update>
+    <select id="searchFraudUsers" parameterType="string" resultType="map">
+        SELECT
+        u.user_num AS userNum,
+        u.user_name AS userName,
+        u.user_id AS userId,
+        u.phone AS phone,
+        COUNT(r.report_num) AS fraudCount,
+        rl.comp_content AS reasonName,
+        COUNT(rl.comp_content) AS reasonCount
+        FROM user u
+        JOIN reportlist r ON u.user_num = r.user_num
+        JOIN reasonlist rl ON r.report_comp_id = rl.comp_id
+        WHERE r.status = 'confirmed'
+        AND (
+        u.user_name LIKE CONCAT('%', #{keyword}, '%')
+        OR u.user_id LIKE CONCAT('%', #{keyword}, '%')
+        OR u.phone LIKE CONCAT('%', #{keyword}, '%')
+        OR u.address_1 LIKE CONCAT('%', #{keyword}, '%')
+        OR u.address_2 LIKE CONCAT('%', #{keyword}, '%')
+        OR u.address_3 LIKE CONCAT('%', #{keyword}, '%')
+        )
+        GROUP BY u.user_num, rl.comp_content
+        ORDER BY fraudCount DESC;
+    </select>
+
+    <select id="getUserName" resultType="String">
+        select user_name from user where user_num = #{userNum}
+    </select>
+
+
+    <select id="getTotal" resultType="int">
+        select count(user_num) from user
+        where is_del = 'N'
+        <include refid="search"/>
+    </select>
+
+    <select id="getUserList" resultType="com.project.joonggo.domain.UserVO">
+        select * from user
+        where is_del = 'N'
+        <include refid="search"/>
+        limit #{startIndex}, #{qty}
+    </select>
+
+    <sql id="search">
+        <if test="keyword != null and keyword != ''">
+            AND (
+            user_name LIKE CONCAT('%', #{keyword}, '%')  <!-- 이름 검색 -->
+            OR user_id LIKE CONCAT('%', #{keyword}, '%')  <!-- 이메일 검색 -->
+            OR phone LIKE CONCAT('%', #{keyword}, '%')    <!-- 전화번호 검색 -->
+            OR address_1 LIKE CONCAT('%', #{keyword}, '%') <!-- 주소 1 검색 -->
+            OR address_2 LIKE CONCAT('%', #{keyword}, '%') <!-- 주소 2 검색 -->
+            OR address_3 LIKE CONCAT('%', #{keyword}, '%') <!-- 주소 3 검색 -->
+            )
+        </if>
+    </sql>
+
+    <!-- 사용자를 추방 처리하는 SQL -->
+    <update id="banUser" parameterType="long">
+        UPDATE user
+        SET is_del = 'Y'
+        WHERE user_num = #{userNum}
+    </update>
+
+    
+    <select id="getSellerAddressByUserNum" resultType="String">
+        select address_3 from user where user_num = #{sellerId}
+    </select>
+
+</mapper>
